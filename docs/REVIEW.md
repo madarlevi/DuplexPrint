@@ -96,6 +96,29 @@ disabled only for those local commands; source and CI do not suppress them.
 
 ## Remaining release checks
 
+### Follow-up: runtime-notice packaging regression
+
+The maintainer's first GitHub build successfully restored/published the app with
+Windows Desktop runtime 10.0.14, then failed the old requirement that each runtime
+pack independently contain both a license and a third-party-notice file.
+That requirement was too strict: Microsoft also supplies combined distribution
+notices, as documented in dotnet/runtime's `src/installer/pkg/README.md`.
+
+`scripts/RuntimeNotices.ps1` now preserves available embedded legal files and
+their relative paths, requires the Core license/combined notices, and records
+the shared notice in `NOTICE-SOURCES.txt` when Desktop does not supply its own.
+An SPDX-only MIT Desktop package may use the checked-in upstream license text
+only after its actual nuspec confirms that exact license expression. Missing,
+empty or changed/unreviewed licensing still fails packaging.
+
+All 12 offline PowerShell packaging regressions pass. They use clearly labelled
+synthetic runtime-pack layouts, including the reported missing-separate-notice
+case; they do not establish that an actual 10.0.14 self-contained publish passed
+locally. The real runtime pack cannot be downloaded through this environment's
+restricted NuGet access. CI now runs these tests before publishing. The
+maintainer must push the fix to run the corrected code; rerunning an old commit
+does not pick up the changed script.
+
 1. Run the prepared Windows CI with network access. Confirm the self-contained
    runtime files **and their exact license/third-party notices** are present.
    Complete an online dependency vulnerability audit.

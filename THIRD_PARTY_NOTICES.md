@@ -75,13 +75,28 @@ Framework-provided dependencies may be pruned by .NET 10; lock files record the
 resolved package graph. No additional managed PDF-engine package was added.
 
 Self-contained ZIPs also contain .NET and Windows Desktop runtime binaries.
-The package script requires their exact runtime-pack LICENSE and third-party
-notice files under `licenses/runtime/`. The primary .NET license is MIT, with
-additional component terms in those notices. Framework-dependent ZIPs use the
-separately installed runtime and do not redistribute it.
+Their applicable terms include MIT, the .NET Library License for certain Windows
+binaries, and Windows SDK terms for specific components; the source repositories'
+MIT licenses do not relicense every redistributed Windows binary.
+
+The package script retains runtime-pack license files and the combined .NET
+distribution third-party notices under `licenses/runtime/`. A Desktop pack need
+not carry a separate copy of the combined notice. If a Desktop pack supplies
+only an SPDX MIT expression instead of a license file, packaging checks that
+exact expression before using the reviewed upstream text in
+[licenses/Microsoft.WindowsDesktop.App-MIT-LICENSE.txt](licenses/Microsoft.WindowsDesktop.App-MIT-LICENSE.txt).
+`licenses/runtime/NOTICE-SOURCES.txt` records the package versions, copied files
+and shared-notice location. Core license/notice files remain mandatory; a missing
+or changed Desktop license is never silently replaced with MIT.
+
+Framework-dependent ZIPs use the separately installed runtime and do not
+redistribute it.
 
 - https://github.com/dotnet/runtime
 - https://github.com/dotnet/wpf
+- https://github.com/dotnet/windowsdesktop/blob/main/LICENSE
+- https://github.com/dotnet/runtime/blob/main/src/installer/pkg/README.md
+- https://github.com/dotnet/core/blob/main/license-information-windows.md
 
 The previous PDF-viewer dependency is not part of this version. No GPL/AGPL
 PDF-engine binary or source is included. This review supports applying MIT

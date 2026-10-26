@@ -230,6 +230,7 @@ Desktop development with C++, or equivalent Build Tools) and Windows SDK
 dotnet restore DuplexPrint.slnx --locked-mode
 dotnet build DuplexPrint.slnx -c Debug --no-restore -warnaserror
 dotnet build DuplexPrint.slnx -c Release --no-restore -warnaserror
+./tests/Packaging.Tests.ps1
 .\tests\DuplexPrint.Tests\bin\Release\net10.0-windows\DuplexPrint.Tests.exe
 dotnet run --project DuplexPrint
 ```
@@ -240,6 +241,9 @@ do not install C++ build tools or a separate VC runtime.
 
 The executable regression harness covers actual PDF rendering, order/blank
 geometry, paper fitting, errors, settings validation and UI transitions.
+The separate offline PowerShell packaging suite checks runtime notice collection,
+Desktop packs without a duplicate notice, SPDX license handling and failures
+for missing/changed legal files. Its fixtures are synthetic, not restored runtimes.
 **No real print jobs are submitted.** Workflow-transition tests use an injected
 submission function; renderer tests use the real OS PDF engine.
 

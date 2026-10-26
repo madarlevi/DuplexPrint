@@ -40,6 +40,8 @@ jobs:
           }
       - name: Restore
         run: dotnet restore DuplexPrint.slnx --locked-mode
+      - name: Packaging regression tests (offline runtime-pack fixtures)
+        run: ./tests/Packaging.Tests.ps1
       - name: Debug build including native Windows PDF helper
         run: dotnet build DuplexPrint.slnx -c Debug --no-restore -warnaserror
       - name: Release build including native Windows PDF helper

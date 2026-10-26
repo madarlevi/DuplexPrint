@@ -45,8 +45,10 @@ if (!$NoPortableMarker) { Set-Content -Encoding ascii -LiteralPath (Join-Path $p
 
 $allowedExecutables = @('DuplexPrint.exe', 'DuplexPrint.PdfWorker.exe')
 if (!$FrameworkDependent) {
+    . (Join-Path $PSScriptRoot 'RuntimeNotices.ps1')
     $assets = Get-Content -Raw -LiteralPath (Join-Path $repo 'DuplexPrint/obj/project.assets.json') | ConvertFrom-Json
     $packageFolders = @($assets.packageFolders.PSObject.Properties.Name)
+    $runtimePacks = @{}
     foreach ($pack in @('microsoft.netcore.app.runtime.win-x64', 'microsoft.windowsdesktop.app.runtime.win-x64')) {
         $downloads = @($assets.project.frameworks.PSObject.Properties.Value.downloadDependencies | Where-Object { $_.name -ieq $pack })
         if ($downloads.Count -ne 1) { throw "Cannot determine the restored runtime pack version: $pack" }
@@ -57,14 +59,7 @@ if (!$FrameworkDependent) {
             if (Test-Path -LiteralPath $candidate) { $packPath = $candidate; break }
         }
         if (!$packPath) { throw "Cannot find restored runtime pack: $pack/$packVersion" }
-        $destination = Join-Path $packageRoot "licenses/runtime/$pack-$packVersion"
-        New-Item -ItemType Directory -Force -Path $destination | Out-Null
-        $notices = @(Get-ChildItem -LiteralPath $packPath -Recurse -File | Where-Object { $_.Name -match '^(LICENSE|THIRD[-_]?PARTY[-_]?NOTICES)(\.(txt|md))?$' })
-        if (!($notices | Where-Object { $_.Name -match '^LICENSE(\.|$)' }) -or
-            !($notices | Where-Object { $_.Name -match '^THIRD[-_]?PARTY[-_]?NOTICES(\.|$)' })) {
-            throw "Runtime license/notice missing from $packPath. Review before distribution."
-        }
-        foreach ($notice in $notices) { Copy-Item -LiteralPath $notice.FullName -Destination $destination }
+        $runtimePacks[$pack] = $packPath
         # The .NET runtime includes its own crash-dump helper. Accept it only when
         # it exactly matches the restored Microsoft runtime pack; never accept
         # an arbitrary additional executable from the application directory.
@@ -75,6 +70,10 @@ if (!$FrameworkDependent) {
             $allowedExecutables += 'createdump.exe'
         }
     }
+    Copy-RuntimeNotices -CorePackPath $runtimePacks['microsoft.netcore.app.runtime.win-x64'] `
+        -DesktopPackPath $runtimePacks['microsoft.windowsdesktop.app.runtime.win-x64'] `
+        -DestinationDirectory (Join-Path $packageRoot 'licenses/runtime') `
+        -DesktopMitLicensePath (Join-Path $repo 'licenses/Microsoft.WindowsDesktop.App-MIT-LICENSE.txt')
 }
 
 $files = @(Get-ChildItem -LiteralPath $packageRoot -Recurse -File)

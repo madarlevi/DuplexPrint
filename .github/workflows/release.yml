@@ -1,0 +1,86 @@
+name: Release a version tag
+
+# Preparing this file does not publish anything. Pushing a vX.Y.Z tag is the
+# maintainer's explicit release action. Branch pushes/PRs only build artifacts.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      value: ${{ steps.version.outputs.value }}
+    steps:
+      - id: version
+        shell: bash
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ ! "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo 'Use a version tag such as v1.2.0.' >&2
+            exit 1
+          fi
+          echo "value=${TAG_NAME#v}" >> "$GITHUB_OUTPUT"
+  build:
+    needs: version
+    uses: ./.github/workflows/build.yml
+    with:
+      version: ${{ needs.version.outputs.value }}
+  publish:
+    needs: [version, build]
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: DuplexPrint-win-x64
+          path: artifacts/release
+      - name: Optionally sign the installed edition
+        env:
+          PFX_BASE64: ${{ secrets.MSIX_CERTIFICATE_BASE64 }}
+          PFX_PASSWORD: ${{ secrets.MSIX_CERTIFICATE_PASSWORD }}
+          TIMESTAMP_URL: ${{ vars.MSIX_TIMESTAMP_URL }}
+        run: |
+          if (!$env:PFX_BASE64) { Write-Host 'No signing certificate configured; the MSIX remains explicitly unsigned.'; exit 0 }
+          if (!$env:PFX_PASSWORD) { throw 'MSIX_CERTIFICATE_PASSWORD is required.' }
+          $certificate = Join-Path $env:RUNNER_TEMP ('DuplexPrint-' + [guid]::NewGuid().ToString('N') + '.pfx')
+          try {
+            [IO.File]::WriteAllBytes($certificate, [Convert]::FromBase64String($env:PFX_BASE64))
+            $sdk = Get-ChildItem -LiteralPath "${env:ProgramFiles(x86)}/Windows Kits/10/bin" -Directory | Where-Object { $_.Name -match '^10\.0\.\d+\.0$' } | Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
+            $tool = Join-Path $sdk.FullName 'x64/signtool.exe'
+            $unsigned = Get-ChildItem -LiteralPath artifacts/release -Filter '*-unsigned.msix' -File
+            if (@($unsigned).Count -ne 1) { throw 'Expected one unsigned MSIX.' }
+            $signArgs = @('sign', '/fd', 'SHA256', '/f', $certificate, '/p', $env:PFX_PASSWORD)
+            if ($env:TIMESTAMP_URL) { $signArgs += @('/tr', $env:TIMESTAMP_URL, '/td', 'SHA256') }
+            & $tool @signArgs $unsigned.FullName
+            if ($LASTEXITCODE -ne 0) { throw 'Signing failed; verify MSIX_PUBLISHER matches the certificate subject.' }
+            & $tool verify /pa $unsigned.FullName
+            if ($LASTEXITCODE -ne 0) { throw 'Signature verification failed.' }
+            $signed = Join-Path $unsigned.DirectoryName $unsigned.Name.Replace('-unsigned.msix', '.msix')
+            Move-Item -LiteralPath $unsigned.FullName -Destination $signed
+            Remove-Item -LiteralPath ($unsigned.FullName + '.sha256')
+            Get-FileHash -Algorithm SHA256 -LiteralPath $signed | ForEach-Object { "$($_.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($signed))" } | Set-Content -Encoding ascii -LiteralPath ($signed + '.sha256')
+          }
+          finally { if (Test-Path -LiteralPath $certificate) { Remove-Item -LiteralPath $certificate } }
+      - name: Create prerelease with the verified artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          $files = @(Get-ChildItem -LiteralPath artifacts/release -File | Where-Object { $_.Name -match '\.(zip|msix|sha256)$' } | ForEach-Object FullName)
+          if (!$files.Count) { throw 'No release packages found.' }
+          gh release create $env:TAG_NAME @files --verify-tag --generate-notes --prerelease --title "DuplexPrint $env:TAG_NAME" --notes-file docs/RELEASE_NOTES.md
+          if ($LASTEXITCODE -ne 0) { throw 'GitHub release creation failed.' }

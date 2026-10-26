@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+ xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+ xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+ xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+ xmlns:printsupport2="http://schemas.microsoft.com/appx/manifest/printsupport/windows10/2"
+ xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+ IgnorableNamespaces="uap uap10 desktop printsupport2 rescap">
+ <Identity Name="madarlevi.DuplexPrint" Publisher="CN=madarlevi" Version="1.2.0.0" ProcessorArchitecture="x64"/>
+ <Properties><DisplayName>DuplexPrint</DisplayName><PublisherDisplayName>Madár Levente (madarlevi)</PublisherDisplayName><Logo>Assets\StoreLogo.png</Logo></Properties>
+ <Dependencies><TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.26100.0" MaxVersionTested="10.0.26100.0"/></Dependencies>
+ <Resources><Resource Language="hu-HU"/><Resource Language="en-US"/></Resources>
+ <Applications>
+  <Application Id="App" Executable="App\DuplexPrint.exe" EntryPoint="Windows.FullTrustApplication" uap10:RuntimeBehavior="packagedClassicApp" uap10:TrustLevel="mediumIL" uap10:SupportsMultipleInstances="true">
+   <uap:VisualElements DisplayName="DuplexPrint" Description="Guided manual duplex printing" BackgroundColor="#192E35" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png"/>
+   <Extensions>
+    <!-- Override the desktop application's runtime: Windows hosts this native task in an AppContainer. -->
+    <printsupport2:Extension Category="windows.printSupportVirtualPrinterWorkflow" EntryPoint="DuplexPrint.CaptureTask" uap10:RuntimeBehavior="windowsApp" uap10:TrustLevel="appContainer">
+     <!-- No PDF passthrough: all jobs use Windows' ticket-aware OpenXPS conversion. -->
+     <printsupport2:PrintSupportVirtualPrinter DisplayName="DuplexPrint" PrinterUri="duplexprint:manual-duplex" PreferredInputFormat="application/oxps" PdcFile="Config\PrinterCapabilities.xml"/>
+    </printsupport2:Extension>
+    <desktop:Extension Category="windows.fullTrustProcess" Executable="App\DuplexPrint.exe">
+     <desktop:FullTrustProcess><desktop:ParameterGroup GroupId="Capture" Parameters="--installed --background"/></desktop:FullTrustProcess>
+    </desktop:Extension>
+   </Extensions>
+  </Application>
+ </Applications>
+ <Capabilities><rescap:Capability Name="runFullTrust"/></Capabilities>
+ <Extensions><Extension Category="windows.activatableClass.inProcessServer"><InProcessServer><Path>DuplexPrint.Capture.dll</Path><ActivatableClass ActivatableClassId="DuplexPrint.CaptureTask" ThreadingModel="both"/></InProcessServer></Extension></Extensions>
+</Package>

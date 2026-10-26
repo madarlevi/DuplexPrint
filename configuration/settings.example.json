@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "printerName": "",
+  "profile": {
+    "id": "hp-laserjet-4250tn",
+    "name": "HP LaserJet 4250tn · eredeti sorrend",
+    "printerModel": "HP LaserJet 4250tn",
+    "frontOrder": "ascending",
+    "backOrder": "ascending",
+    "backRotationDegrees": 0,
+    "reinsertionInstructions": "Várd meg, amíg az első adag minden lapja kijön. Fordítsd meg a teljes köteget: az írás felül legyen, a szöveg a nyomtató hátulja felől legyen olvasható. A lapok sorrendjét ne változtasd meg. Helyezd vissza a köteget, majd indítsd a második adagot."
+  }
+}

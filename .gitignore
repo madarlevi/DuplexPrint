@@ -1,0 +1,53 @@
+# Build, IDE and machine-specific files
+**/bin/
+**/obj/
+**/.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.exe
+*.dll
+*.pdb
+*.nupkg
+*.snupkg
+*.msi
+*.zip
+*.7z
+*.tmp
+*.temp
+*.log
+*.bak
+~$*
+TestResults/
+artifacts/
+.local/
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.key
+
+# Native compiler intermediates
+*.obj
+*.ilk
+*.exp
+*.lib
+
+# Private preferences, captured documents, signing and installer output
+**/settings.json
+**/settings.json.*
+*.msix
+*.appx
+*.msixbundle
+*.cer
+*.crt
+*.pdf
+**/Inbox/
+**/History/
+
+# A separate, ready-to-copy repository; publish it from its own directory.
+/printer-profiles-repo/

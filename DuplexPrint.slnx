@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DuplexPrint/DuplexPrint.csproj" />
+  <Project Path="tests/DuplexPrint.Tests/DuplexPrint.Tests.csproj" />
+</Solution>

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DuplexPrint printer profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "printerModel", "frontOrder", "backOrder", "backRotationDegrees", "reinsertionInstructions"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 150},
+    "printerModel": {"type": "string", "maxLength": 150},
+    "frontOrder": {"enum": ["ascending", "descending"]},
+    "backOrder": {"enum": ["ascending", "descending"]},
+    "backRotationDegrees": {"enum": [0, 180]},
+    "reinsertionInstructions": {"type": "string", "minLength": 1, "maxLength": 2500}
+  }
+}

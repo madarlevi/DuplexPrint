@@ -1,0 +1,72 @@
+name: Windows build and package
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      PACKAGE_VERSION: ${{ inputs.version || '1.2.0' }}
+      MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER || 'CN=madarlevi' }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Reject committed dependency binaries
+        run: |
+          $tracked = @(git ls-files)
+          if ($tracked | Where-Object { $_ -match '(?i)\.(exe|dll|pdb|zip|nupkg|msix|pfx|key)$|(^|/)settings\.json$' }) {
+            throw 'Generated binaries and downloaded archives must not be tracked.'
+          }
+          if ($tracked | Where-Object { $_ -match '(?i)\.(obj|lib|ilk)$' }) {
+            throw 'Native build intermediates must not be tracked.'
+          }
+      - name: Restore
+        run: dotnet restore DuplexPrint.slnx --locked-mode
+      - name: Debug build including native Windows PDF helper
+        run: dotnet build DuplexPrint.slnx -c Debug --no-restore -warnaserror
+      - name: Release build including native Windows PDF helper
+        run: dotnet build DuplexPrint.slnx -c Release --no-restore -warnaserror
+      - name: Regression tests (no print jobs)
+        run: |
+          & ./tests/DuplexPrint.Tests/bin/Release/net10.0-windows/DuplexPrint.Tests.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Regression tests failed.' }
+      - name: Native virtual printer activation tests (no installation or print jobs)
+        run: |
+          ./scripts/Build-PdfWorker.ps1 -Component CaptureTask -OutputDirectory ./artifacts/capture-tests
+          ./scripts/Build-PdfWorker.ps1 -Component CaptureTests -OutputDirectory ./artifacts/capture-tests
+          & ./artifacts/capture-tests/DuplexPrint.CaptureTests.exe (Join-Path $PWD 'artifacts/capture-tests/DuplexPrint.Capture.dll')
+          if ($LASTEXITCODE -ne 0) { throw 'Capture activation tests failed.' }
+      - name: Publish and validate self-contained Windows x64 ZIP
+        run: ./scripts/Package.ps1 -Version $env:PACKAGE_VERSION
+      - name: Build experimental installed edition (unsigned MSIX)
+        run: ./scripts/Package-Installed.ps1 -Version $env:PACKAGE_VERSION -Publisher $env:MSIX_PUBLISHER
+      - name: Upload validated packages and checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: DuplexPrint-win-x64
+          path: |
+            artifacts/packages/*.zip
+            artifacts/packages/*.sha256
+            artifacts/packages/*.msix
+          if-no-files-found: error
+          retention-days: 14
+
+# This workflow stores build artifacts. release.yml calls it before publishing a tag.

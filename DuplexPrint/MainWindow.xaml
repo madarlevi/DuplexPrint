@@ -1,0 +1,85 @@
+<Window x:Class="VirtualDuplexPrinter.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DuplexPrint" Width="1010" Height="740" MinWidth="820" MinHeight="650"
+        Background="#F3F2ED" Foreground="#192E35" FontFamily="Segoe UI" FontSize="14"
+        WindowStartupLocation="CenterScreen" AllowDrop="True" Drop="Window_Drop" DragOver="Window_DragOver">
+    <Window.Resources><ResourceDictionary Source="Design.xaml"/></Window.Resources>
+    <Grid Background="#F3F2ED">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="218"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Border Background="#192E35" Padding="26,32">
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel>
+                    <Canvas Width="48" Height="47" HorizontalAlignment="Left" Margin="0,0,0,18">
+                        <Rectangle Canvas.Left="10" Canvas.Top="0" Width="30" Height="38" Stroke="#D7794D" StrokeThickness="2"/>
+                        <Rectangle Canvas.Left="0" Canvas.Top="8" Width="30" Height="38" Stroke="White" StrokeThickness="2" Fill="#192E35"/>
+                        <Path Data="M 7,20 H 23 M 7,27 H 23 M 7,34 H 17" Stroke="White" StrokeThickness="2"/>
+                    </Canvas>
+                    <TextBlock Text="DuplexPrint" Foreground="White" FontSize="23" FontWeight="Bold"/>
+                    <TextBlock Text="Két oldal. Egy köteg." Foreground="#B6C6C4" Margin="0,7,0,0" FontSize="12"/>
+                    <Border Background="#4B6061" Height="1" Margin="0,28,0,28"/>
+                    <TextBlock x:Name="navFirst" Text="01  Első adag" Foreground="White" FontWeight="SemiBold" Margin="0,0,0,22"/>
+                    <TextBlock x:Name="navReload" Text="02  Papírfordítás" Foreground="#9CAFAF" Margin="0,0,0,22"/>
+                    <TextBlock x:Name="navFinish" Text="03  Második adag" Foreground="#9CAFAF"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2">
+                    <TextBlock Text="KÉZI KÉTOLDALAS NYOMTATÁS" FontSize="9" Foreground="#B6C6C4" TextWrapping="Wrap"/>
+                    <TextBlock Text="A következő adag mindig&#10;a te jóváhagyásodra vár." Foreground="#B6C6C4" FontSize="12" Margin="0,10,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid Margin="32,27,32,22">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <DockPanel Margin="0,0,0,24">
+                    <Button x:Name="btnSettings" DockPanel.Dock="Right" Content="Beállítások" Click="BtnSettings_Click" VerticalAlignment="Top"/>
+                    <StackPanel>
+                        <TextBlock Text="PAPÍRBÓL TÖBBET KIHOZNI" Style="{StaticResource Label}"/>
+                        <TextBlock x:Name="txtTitle" Text="Nyomtass két oldalra." FontSize="28" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </DockPanel>
+                <Border Grid.Row="1" Background="White" BorderBrush="#D3DAD5" BorderThickness="1" Padding="22" Margin="0,0,0,18">
+                    <StackPanel>
+                        <DockPanel>
+                            <Button x:Name="btnOpen" Content="PDF kiválasztása" DockPanel.Dock="Right" Click="BtnOpen_Click" Margin="16,0,0,0"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="DOKUMENTUM" Style="{StaticResource Label}"/>
+                                <TextBlock x:Name="txtDocument" Text="Húzz ide egy PDF-et, vagy válassz fájlt." TextWrapping="Wrap" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </DockPanel>
+                        <Border Height="1" Background="#E1E5E0" Margin="0,20,0,18"/>
+                        <TextBlock Text="FIZIKAI NYOMTATÓ" Style="{StaticResource Label}"/>
+                        <DockPanel>
+                            <Button x:Name="btnRefresh" DockPanel.Dock="Right" Content="Frissítés" Click="BtnRefresh_Click" Margin="10,0,0,0" Padding="12,8"/>
+                            <ComboBox x:Name="PrinterComboBox" AutomationProperties.Name="Fizikai nyomtató"/>
+                        </DockPanel>
+                        <TextBlock x:Name="txtPrinterStatus" TextWrapping="Wrap" Foreground="#A43720" Margin="0,8,0,0"/>
+                        <TextBlock x:Name="txtProfile" FontSize="12" Foreground="#596A6C" Margin="0,9,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Row="2" Background="#E8EDE7" BorderBrush="#CFD8CF" BorderThickness="1" Padding="22" Margin="0,0,0,20">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="74"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center" Margin="0,0,15,0">
+                            <Border BorderBrush="#192E35" BorderThickness="2" Background="#FAFBF8" Height="69" Width="48" Padding="5">
+                                <StackPanel><TextBlock x:Name="txtPaper" Text="1 / 3" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" Margin="0,6,0,9"/><Rectangle Fill="#829491" Height="2" Margin="0,0,0,5"/><Rectangle Fill="#829491" Height="2" Margin="0,0,0,5"/><Rectangle Fill="#829491" Height="2" Width="20" HorizontalAlignment="Left"/></StackPanel>
+                            </Border>
+                            <TextBlock x:Name="txtDiagram" Text="ELŐLAPOK" FontSize="9" HorizontalAlignment="Center" Margin="0,8,0,0" FontWeight="Bold"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock x:Name="txtStage" Text="Kezdjük a dokumentummal." FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                            <TextBlock x:Name="txtInstructions" Text="Válassz PDF-et és nyomtatót. Az első adag után megmutatjuk, hogyan helyezd vissza a papírt." TextWrapping="Wrap" LineHeight="22"/>
+                            <TextBlock x:Name="txtOrder" FontFamily="Consolas" FontSize="12" Foreground="#596A6C" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <StackPanel Grid.Row="3">
+                    <ProgressBar x:Name="progressBar" Minimum="0" Maximum="100" Height="4" BorderThickness="0" Foreground="#B84420" Background="#D8DFD7" Margin="0,0,0,17"/>
+                    <Button x:Name="btnNext" Content="Első adag nyomtatása  →" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Right" IsEnabled="False" Click="BtnNext_Click"/>
+                </StackPanel>
+                <TextBlock Grid.Row="4" x:Name="txtInbox" Foreground="#596A6C" FontSize="10" TextWrapping="Wrap" Margin="0,19,0,0"/>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Window>
